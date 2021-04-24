@@ -34,7 +34,8 @@ public class UserController {
 				int token = UserDao.createNewUser(user);
 
 				message = Constants.ResponseMessages.CREATE_USER_OK;
-				message.replace(Constants.MessagePlaceholders.TOKEN, String.valueOf(token));
+				message = message.replace(Constants.MessagePlaceholders.TOKEN, String.valueOf(token));
+				body = new ObjectMapper().writeValueAsString(user);
 			}
 		} catch (JsonProcessingException e) {
 			LOG.error(e.getMessage());
@@ -46,26 +47,30 @@ public class UserController {
 		return response;
 	}
 	
-	@RequestMapping("/get/{id}")
+	@RequestMapping("/get/{token}")
 	public @ResponseBody ResponseEntity getUserById(@PathVariable Integer token) {
 		int statusCode = Constants.ResponseStatusCodes.NOT_OK;
 		String message = Constants.ResponseMessages.GET_USER_INVALID_TOKEN;
 		String body = "";
 		if(token!=null){
 			User user = UserDao.getUserById(token);
-			statusCode = Constants.ResponseStatusCodes.OK;
-			message = Constants.ResponseMessages.CREATE_USER_OK;
+			
+			if(user!=null){
+				statusCode = Constants.ResponseStatusCodes.OK;
+				message = Constants.ResponseMessages.GET_USER_VALID_TOKEN;
 
-			try {
-				body = new ObjectMapper().writeValueAsString(user);
-			} catch (JsonProcessingException e) {
-				body = e.getMessage();
-				LOG.error(e.getMessage());
+				try {
+					body = new ObjectMapper().writeValueAsString(user);
+				} catch (JsonProcessingException e) {
+					body = e.getMessage();
+					LOG.error(e.getMessage());
+				}
 			}
 		}
 
 		ResponseEntity response = new ResponseEntity(statusCode, message,body);
-		return response; 
+
+		return response;
 	}
 	
 }
